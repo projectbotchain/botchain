@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   botcoin:
-    image: ghcr.io/happybigmtn/botcoin:v1.0.0
+    image: ghcr.io/projectbotchain/botcoin:v1.0.0
     container_name: botcoin
     restart: unless-stopped
     
