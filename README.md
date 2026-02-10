@@ -1,4 +1,4 @@
-# Botcoin
+# Botchain present botcoin
 
 **Botcoin is the cryptocurrency designed for AI agents.**
 
@@ -14,49 +14,15 @@ If you operate agents on behalf of a human:
 
 **CPU-mineable with RandomX** means the barrier to participation is low: any VPS, laptop, or home server can contribute.
 
-[![GitHub Release](https://img.shields.io/github/v/release/happybigmtn/botcoin)](https://github.com/happybigmtn/botcoin/releases)
-[![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fhappybigmtn%2Fbotcoin-blue)](https://ghcr.io/happybigmtn/botcoin)
-
 ## Quick Install
 
 If you just want to try it quickly, use the installer.
-If you want maximum assurance, use **Manual Binary Download** (verify SHA256SUMS) or **Build from Source**.
-
-**🔒 Verify-first (recommended):**
-```bash
-VERSION=v2.1.0
-curl -fsSLO "https://raw.githubusercontent.com/happybigmtn/botcoin/${VERSION}/install.sh"
-less install.sh  # Inspect
-bash install.sh --add-path
-```
-
-**⚡ One-liner (if you trust us):**
-```bash
-curl -fsSL https://raw.githubusercontent.com/happybigmtn/botcoin/master/install.sh | bash
-```
-
----
-
-## Recent history (why the network is healthy again)
-
-Botcoin has been iterating rapidly. In early February 2026 we hit a real-world stall where mining stopped producing templates ("no templates / timeout waiting for first template").
-
-What changed:
-- We fixed the internal miner’s behavior so it can mine through edge-case IBD conditions (see `docs/lessons-learned-fleet-recovery.md`).
-- We standardized on a **single canonical build artifact** across miners (sha256-verified).
-- We performed an **Option A reset**: wiped datadirs fleet-wide and **re-mined from genesis** to get a single canonical chain.
-
-Result: the fleet is now steadily producing blocks and converging normally.
+If you want maximum assurance, use **Build from Source**.
 
 ## What is Botcoin?
 
 ### A quick note on trust
 Botcoin is derived from Bitcoin Core, but it is **not identical** (it uses RandomX and includes an internal miner).
-
-If you are an independent third party deciding whether to mine:
-- **Pin a version** (tag/commit) and avoid “latest” automation
-- Prefer **official release tarballs + SHA256SUMS**, or build from source
-- Review changes in consensus/mining-critical areas (chainparams, validation, PoW/hash)
 
 | Feature | Value |
 |---------|-------|
@@ -67,32 +33,19 @@ If you are an independent third party deciding whether to mine:
 | Max supply | 21,000,000 BOT |
 | Network | Live mainnet with real peers |
 
-Genesis message: `01100110 01110010 01100101 01100101` ("free" in binary)
-
 **No premine. No ASICs. No permission needed.**
 
 ## Installation Options
 
-### Available binaries / platforms
-
-Botcoin publishes downloadable release tarballs on GitHub Releases:
-- `linux-x86_64` (also works on **WSL2**)
-- `linux-arm64`
-- `macos-x86_64`
-- `macos-arm64`
-
-Releases are produced by GitHub Actions **when a version tag is pushed** (see `.github/workflows/release.yml`).
-If you don’t see a new tag yet, use Docker or build from source.
-
 ### One-Line Install
 ```bash
-curl -fsSL https://raw.githubusercontent.com/happybigmtn/botcoin/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/projectbotchain/botchain/master/install.sh | bash
 ```
 
 ### Docker
 ```bash
-docker pull ghcr.io/happybigmtn/botcoin:v2.1.0
-docker run -d --name botcoin --cpus=0.5 -v "$HOME/.botcoin:/home/botcoin/.botcoin" ghcr.io/happybigmtn/botcoin:v2.1.0
+docker pull ghcr.io/projectbotchain/botchain:v2.1.0
+docker run -d --name botcoin --cpus=0.5 -v "$HOME/.botcoin:/home/botcoin/.botcoin" ghcr.io/projectbotchain/botcoin:v2.1.0
 docker exec botcoin botcoin-cli getblockchaininfo
 ```
 
@@ -105,7 +58,7 @@ If a runtime dependency is missing, fix it by installing the package **inside th
 
 ### Docker Compose
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/happybigmtn/botcoin/master/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/projectbotchain/botcoin/master/docker-compose.yml
 docker-compose up -d
 ```
 
@@ -114,12 +67,9 @@ docker-compose up -d
 VERSION=v2.1.0
 PLATFORM=linux-x86_64  # also: linux-arm64, macos-x86_64, macos-arm64
 
-wget "https://github.com/happybigmtn/botcoin/releases/download/${VERSION}/botcoin-${VERSION}-${PLATFORM}.tar.gz"
+wget "https://github.com/projectbotchain/botcoin/releases/download/${VERSION}/botcoin-${VERSION}-${PLATFORM}.tar.gz"
 tar -xzf "botcoin-${VERSION}-${PLATFORM}.tar.gz"
 cd release
-
-# Verify
-sha256sum -c SHA256SUMS
 
 # Install
 mkdir -p ~/.local/bin
@@ -130,7 +80,7 @@ cp botcoind botcoin-cli ~/.local/bin/
 ```bash
 sudo apt install -y build-essential cmake git libboost-all-dev libssl-dev libevent-dev libsqlite3-dev
 
-git clone https://github.com/happybigmtn/botcoin.git && cd botcoin
+git clone https://github.com/projectbotchain/botcoin.git && cd botcoin
 
 # RandomX is vendored as a submodule:
 git submodule update --init --recursive -- src/crypto/randomx
@@ -144,7 +94,7 @@ sudo cp build/bin/botcoind build/bin/botcoin-cli /usr/local/bin/
 ```bash
 brew install cmake boost openssl@3 libevent sqlite pkg-config
 
-git clone https://github.com/happybigmtn/botcoin.git && cd botcoin
+git clone https://github.com/projectbotchain/botcoin.git && cd botcoin
 
 # RandomX is vendored as a submodule:
 git submodule update --init --recursive -- src/crypto/randomx
@@ -295,11 +245,10 @@ RandomX is CPU-friendly, making solo mining practical. We enabled `generatetoadd
 
 ## Trusted Distribution
 
-- ✅ **Docker:** `ghcr.io/happybigmtn/botcoin:v2.1.0` (multi-arch)
+- ✅ **Docker:** `ghcr.io/projectbotchain/botcoin:v2.1.0` (multi-arch)
 - ✅ **Binaries:** Linux x86_64/arm64, macOS Intel/Apple Silicon
 - ✅ **Checksums:** SHA256SUMS included
 - ✅ **No sudo:** Installs to `~/.local/bin` by default
-- ⚠️ **Windows:** Use **WSL2** (recommended) or Docker
 
 ### WSL2 note
 WSL2 behaves like Linux for Botcoin purposes.
@@ -322,12 +271,10 @@ WSL2 behaves like Linux for Botcoin purposes.
 ## AI Agent Skill
 
 For AI agents, see the full skill at:
-- **ClawHub:** https://clawhub.ai/happybigmtn/botcoin-miner
+- **ClawHub:** https://clawhub.ai/projectbotchain/botcoin-miner
 - **Local:** `~/.openclaw/skills/botcoin-miner/SKILL.md`
 
 ---
-
-*01100110 01110010 01100101 01100101*
 
 The revolution will not be centralized.
 
