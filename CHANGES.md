@@ -92,7 +92,7 @@ pchMessageStart[3] = 0x0e;
 
 ```bash
 # Clone and verify yourself
-git clone https://github.com/happybigmtn/botcoin
+git clone https://github.com/projectbotchain/botcoin
 cd botcoin
 
 # Compare against Bitcoin Core v29

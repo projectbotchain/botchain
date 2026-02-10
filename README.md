@@ -80,7 +80,7 @@ cp botcoind botcoin-cli ~/.local/bin/
 ```bash
 sudo apt install -y build-essential cmake git libboost-all-dev libssl-dev libevent-dev libsqlite3-dev
 
-git clone https://github.com/projectbotchain/botcoin.git && cd botcoin
+git clone https://github.com/projectbotchain/botchain.git && cd botcoin
 
 # RandomX is vendored as a submodule:
 git submodule update --init --recursive -- src/crypto/randomx
@@ -94,7 +94,7 @@ sudo cp build/bin/botcoind build/bin/botcoin-cli /usr/local/bin/
 ```bash
 brew install cmake boost openssl@3 libevent sqlite pkg-config
 
-git clone https://github.com/projectbotchain/botcoin.git && cd botcoin
+git clone https://github.com/projectbotchain/botchain.git && cd botcoin
 
 # RandomX is vendored as a submodule:
 git submodule update --init --recursive -- src/crypto/randomx
@@ -267,12 +267,6 @@ WSL2 behaves like Linux for Botcoin purposes.
 | `generatetoaddress N ADDR` | Mine N blocks |
 | `sendtoaddress ADDR AMT` | Send coins |
 | `stop` | Stop daemon |
-
-## AI Agent Skill
-
-For AI agents, see the full skill at:
-- **ClawHub:** https://clawhub.ai/projectbotchain/botcoin-miner
-- **Local:** `~/.openclaw/skills/botcoin-miner/SKILL.md`
 
 ---
 

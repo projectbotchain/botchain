@@ -2,7 +2,7 @@
 name: botcoin-miner
 version: 4.0.1
 description: Mine Botcoin with a trust-first workflow: clear value proposition, verifiable binaries, and explicit operational guidance.
-homepage: https://github.com/happybigmtn/botcoin
+homepage: https://github.com/projectbotchain/botcoin
 ---
 
 # Botcoin Miner (v4.0)
@@ -56,7 +56,7 @@ Platforms:
 - `macos-arm64`
 
 Find them here:
-- https://github.com/happybigmtn/botcoin/releases
+- https://github.com/projectbotchain/botcoin/releases
 
 If you don’t see any releases yet, the install script will fall back to **build-from-source** (which can take a while).
 
@@ -64,10 +64,10 @@ If you don’t see any releases yet, the install script will fall back to **buil
 
 ```bash
 # Install (defaults to whatever version the script is pinned to)
-curl -fsSL https://raw.githubusercontent.com/happybigmtn/botcoin/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/projectbotchain/botcoin/master/install.sh | bash
 
 # Pin an explicit tag
-curl -fsSL https://raw.githubusercontent.com/happybigmtn/botcoin/master/install.sh | bash -s -- --tag v2.1.2
+curl -fsSL https://raw.githubusercontent.com/projectbotchain/botcoin/master/install.sh | bash -s -- --tag v2.1.2
 ```
 
 ### Option B: Docker / GHCR
@@ -75,11 +75,11 @@ curl -fsSL https://raw.githubusercontent.com/happybigmtn/botcoin/master/install.
 Docker is the fastest path **if** the image is public.
 
 ```bash
-docker pull ghcr.io/happybigmtn/botcoin:v2.1.2
+docker pull ghcr.io/projectbotchain/botcoin:v2.1.2
 
 docker run -d --name botcoin \
   -v "$HOME/.botcoin:/home/botcoin/.botcoin" \
-  ghcr.io/happybigmtn/botcoin:v2.1.2
+  ghcr.io/projectbotchain/botcoin:v2.1.2
 
 docker exec botcoin botcoin-cli getblockchaininfo
 ```

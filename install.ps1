@@ -1,12 +1,12 @@
 # Botcoin Installer for Windows
-# Run in PowerShell: irm https://raw.githubusercontent.com/happybigmtn/botcoin/main/install.ps1 | iex
+# Run in PowerShell: irm https://raw.githubusercontent.com/projectbotchain/botcoin/main/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
 $Version = if ($env:BOTCOIN_VERSION) { $env:BOTCOIN_VERSION } else { "v1.0.0" }
 $InstallDir = if ($env:BOTCOIN_INSTALL_DIR) { $env:BOTCOIN_INSTALL_DIR } else { "$env:LOCALAPPDATA\Botcoin" }
 $DataDir = if ($env:BOTCOIN_DATA_DIR) { $env:BOTCOIN_DATA_DIR } else { "$env:APPDATA\Botcoin" }
-$Repo = "happybigmtn/botcoin"
+$Repo = "projectbotchain/botcoin"
 $GithubUrl = "https://github.com/$Repo"
 
 function Write-Info { Write-Host "[INFO] $args" -ForegroundColor Blue }

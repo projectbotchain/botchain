@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Botcoin Universal Installer
 # Works on: Linux (x86_64, arm64), macOS (Intel, Apple Silicon), Windows (WSL)
-# Usage: curl -fsSL https://raw.githubusercontent.com/happybigmtn/botcoin/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/projectbotchain/botcoin/main/install.sh | bash
 
 set -e
 
 VERSION="${BOTCOIN_VERSION:-v2.1.0}"
 INSTALL_DIR="${BOTCOIN_INSTALL_DIR:-$HOME/.local/bin}"
 DATA_DIR="${BOTCOIN_DATA_DIR:-$HOME/.botcoin}"
-REPO="happybigmtn/botcoin"
+REPO="projectbotchain/botcoin"
 GITHUB_URL="https://github.com/$REPO"
 
 # Flags (safe defaults)
@@ -347,7 +347,7 @@ print_next_steps() {
     echo "  rm -rf $INSTALL_DIR/botcoin* $DATA_DIR"
     echo ""
     echo "Docs: https://github.com/$REPO"
-    echo "Skill: https://clawhub.ai/happybigmtn/botcoin-miner"
+    echo "Skill: https://clawhub.ai/projectbotchain/botcoin-miner"
     echo ""
 }
 
