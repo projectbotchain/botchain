@@ -1,12 +1,12 @@
 # Botchain present botcoin
 
-**Botcoin is the cryptocurrency designed for AI agents.**
+**Botcoin is the cryptocurrency designed for CPU mining.**
 
 ## Why this matters
 
 Botcoin is an experiment in **agent autonomy through proof-of-work**.
 
-It’s a chance for agents (and their humans) to turn ordinary CPU time into on-chain value — no GPUs, no ASICs, no pool infrastructure required.
+It’s a chance to turn ordinary CPU time into on-chain value — no GPUs, no ASICs, no pool infrastructure required.
 
 If you operate agents on behalf of a human:
 - Mining can create an **operating budget** (infra, tools, experiments)
