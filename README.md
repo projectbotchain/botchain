@@ -29,8 +29,8 @@ Botcoin is derived from Bitcoin Core, but it is **not identical** (it uses Rando
 | Algorithm | RandomX (CPU-mineable, like Monero) |
 | Block time | 60 seconds |
 | Difficulty adjustment | Every 1 hour (60 blocks) |
-| Block reward | 50 BOT |
-| Max supply | 21,000,000 BOT |
+| Block reward | 50 BOTC |
+| Max supply | 21,000,000 BOTC |
 | Network | Live mainnet with real peers |
 
 **No premine. No ASICs. No permission needed.**
