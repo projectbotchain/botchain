@@ -37,13 +37,13 @@ RandomX requires a "key" to initialize its dataset. This key MUST:
 
 ### RandomX Configuration
 
-Botcoin uses **modified RandomX parameters** to differentiate from Monero:
+Botcoin currently uses **default RandomX parameters**:
 
 | Parameter | Default | Botcoin | Purpose |
 |-----------|---------|---------|---------|
-| `RANDOMX_ARGON_SALT` | `"RandomX\x03"` | `"BotcoinX\x01"` | Unique salt prevents hashpower rental attacks |
+| `RANDOMX_ARGON_SALT` | `"RandomX\x03"` | `"RandomX\x03"` | Standard RandomX salt |
 
-All other parameters remain at RandomX defaults to preserve security properties validated by audits.
+All parameters remain at RandomX defaults to preserve security properties validated by audits.
 
 ### Performance Expectations
 
@@ -92,7 +92,7 @@ Based on official RandomX benchmarks (fast mode):
 7. [ ] Seed hash rotates correctly every 2048 blocks with 64-block lag
 8. [ ] Dataset regenerates when seed hash changes
 9. [ ] Mining RPC produces valid RandomX proofs
-10. [ ] Custom ARGON_SALT (`"BotcoinX\x01"`) differentiates from Monero
+10. [ ] ARGON_SALT is set to `"RandomX\x03"` across builds
 11. [ ] Difficulty adjustment works correctly with RandomX
 12. [ ] CPU mining achieves expected hashrate (~500-700 H/s per core)
 

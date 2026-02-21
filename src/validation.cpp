@@ -1837,14 +1837,24 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    // Monero-style tail emission: block reward never drops below 0.6 BOT
+    // This guarantees perpetual mining incentive regardless of fee market
+    static const CAmount TAIL_EMISSION = 60000000; // 0.6 BOT (in satoshis)
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+
+    CAmount nSubsidy;
+    if (halvings >= 64) {
+        nSubsidy = 0;
+    } else {
+        nSubsidy = 50 * COIN;
+        nSubsidy >>= halvings;
+    }
+
+    // Tail emission floor: never go below 0.6 BOT per block
+    if (nSubsidy < TAIL_EMISSION)
+        nSubsidy = TAIL_EMISSION;
+
     return nSubsidy;
 }
 

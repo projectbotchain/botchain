@@ -33,7 +33,7 @@ const std::string UA_NAME("Botcoin");
 
 // git will expand the next line to "#define GIT_COMMIT_ID ..." inside archives:
 //
-#define GIT_COMMIT_ID "be04681c232358b925e7b135045cc9899109446c"
+#define GIT_COMMIT_ID "23217588a9c63639efafbccec0482e53c1a6b179"
 
 #ifdef BUILD_GIT_TAG
     #define BUILD_DESC BUILD_GIT_TAG

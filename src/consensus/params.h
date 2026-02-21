@@ -119,6 +119,10 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
+    /** Monero-style difficulty: window size for LWMA (720 blocks like Monero) */
+    int64_t nDifficultyWindow{720};
+    /** Monero-style difficulty: timestamps to cut from each end after sorting */
+    int64_t nDifficultyCut{60};
     std::chrono::seconds PowTargetSpacing() const
     {
         return std::chrono::seconds{nPowTargetSpacing};

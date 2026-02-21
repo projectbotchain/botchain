@@ -57,7 +57,7 @@ count_completed() {
 }
 
 count_blocked() {
-    grep 'Blocked:' "$PLAN_FILE" 2>/dev/null | wc -l || true
+    grep -c '^[[:space:]]*- \[!\]' "$PLAN_FILE" 2>/dev/null || echo 0
 }
 
 # Verify files exist

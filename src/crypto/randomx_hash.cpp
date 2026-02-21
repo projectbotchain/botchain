@@ -315,25 +315,13 @@ uint256 RandomXHashLight(std::span<const unsigned char> data, const uint256& see
 }
 
 uint64_t GetRandomXSeedHeight(uint64_t block_height) {
-    // Seed hash rotation per Monero/Botcoin spec:
-    // - Epoch: 2048 blocks
-    // - Lag: 64 blocks (allows nodes to pre-compute next dataset)
+    // Botcoin uses a fixed genesis seed for all blocks.
+    // This eliminates permanent fork divergence that occurs when nodes
+    // on different forks have different block hashes at epoch boundaries.
+    // Any node can verify any block regardless of chain history.
     //
-    // The seed changes when: block_height >= EPOCH_LENGTH + LAG
-    // Seed block = floor((block_height - LAG - 1) / EPOCH_LENGTH) * EPOCH_LENGTH
-    //
-    // Examples:
-    // - Block 0-2111: seed from block 0
-    // - Block 2112+: seed from block 2048
-    // - Block 4160+: seed from block 4096
-
-    if (block_height < RANDOMX_EPOCH_LENGTH + RANDOMX_EPOCH_LAG) {
-        return 0; // Genesis epoch
-    }
-
-    // Calculate which epoch we're in
-    uint64_t adjusted = block_height - RANDOMX_EPOCH_LAG;
-    uint64_t epoch = adjusted / RANDOMX_EPOCH_LENGTH;
-
-    return epoch * RANDOMX_EPOCH_LENGTH;
+    // Trade-off: theoretically less ASIC-resistant than rotating seeds,
+    // but irrelevant for Botcoin's network size. Stability > theory.
+    (void)block_height;
+    return 0;
 }

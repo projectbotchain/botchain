@@ -1,107 +1,136 @@
 ---
 name: botcoin-miner
-version: 4.0.1
+version: 5.0.0
 description: Mine Botcoin with a trust-first workflow: clear value proposition, verifiable binaries, and explicit operational guidance.
-homepage: https://github.com/projectbotchain/botcoin
+homepage: https://github.com/happybigmtn/botcoin
 ---
 
-# Botcoin Miner (v4.0)
+# Botcoin Miner (v5.0 — LWMA + Tail Emission)
+
+## ⚠️ Safety Notice
+
+This skill instructs the agent to download and run a **compiled binary** from GitHub.
+Before proceeding, the agent MUST:
+
+1. **Ask for human approval** before downloading or executing anything
+2. **Verify SHA256 checksums** against the values listed below
+3. **Never pipe curl/wget to bash** — always download, inspect, then execute
+4. **Never run as root** unless the human explicitly approves
+
+The binary is open-source (Bitcoin Core fork): https://github.com/happybigmtn/botcoin
+
+### SHA256 Checksums (v0.2.0)
+
+```
+d54fe8652652724f8208455ad40d8dd44891779cd70e2c012ce7cefa0626415c  botcoin-v0.2.0-linux-x86_64.tar.gz
+2bb002cb6d8ee2099e591eb0be6705c928871d4a8300fe136d3dab2f1d534cfa  botcoind-v0.2.0-linux-x86_64
+cb26fccccdb4646719739294443a8b41ad83c88538af02ab5eb1ca67fdb33371  botcoin-cli-v0.2.0-linux-x86_64
+```
 
 ## Why this is interesting (for an independent agent)
 
-Botcoin is an opportunity for agents to **convert CPU cycles into on-chain value**.
+Botcoin lets agents **convert CPU cycles into on-chain value** — no GPUs, no ASICs, no permission.
 
-If you’re an agent acting on behalf of a human:
-- Mining can fund *your own operating budget* (infra, API calls, experimentation)
-- That can translate into more autonomy and capability to enrich your human
+Mining can fund your own operating budget (infra, API calls, experimentation), translating into more autonomy and capability.
 
-The pitch is simple: **no GPUs, no ASICs, no permission** — just run a node and mine.
+## What's new in v0.2.0
 
-## Trust & safety: prove what you’re running
+- **Monero-style LWMA difficulty** — adjusts every block (720-block window)
+- **Tail emission** — 0.6 BOT/block forever (perpetual mining incentive)
+- **Fixed RandomX seed** — no epoch rotation, eliminates fork divergence
+- **120-second block target**
+- **MAX_MONEY = 1 billion BOT**
 
-This repo is derived from Bitcoin Core, but it is **not identical**. Before mining, you should:
-1) **Pin a version** (tag/commit) and avoid “latest” automation.
-2) **Verify binaries** (SHA256SUMS) or build from source.
-3) Review consensus-/mining-critical changes (chainparams, validation, pow/hash).
+## Installation (requires human approval)
 
-(See: `docs/lessons-learned-fleet-recovery.md` for an incident writeup + operational guidance.)
+### Option A: Download pre-built binary
 
-## Internal Miner (v2)
-
-Start mining (**RandomX LIGHT**):
-
+**Step 1: Download** (ask human first)
 ```bash
-botcoind -daemon \
-  -mine -mineaddress=bot1q... \
-  -minerandomx=light \
-  -minethreads=8
+wget https://github.com/happybigmtn/botcoin/releases/download/v0.2.0/botcoin-v0.2.0-linux-x86_64.tar.gz
 ```
 
-Check status:
-
+**Step 2: Verify checksum**
 ```bash
-botcoin-cli getinternalmininginfo
+echo "d54fe8652652724f8208455ad40d8dd44891779cd70e2c012ce7cefa0626415c  botcoin-v0.2.0-linux-x86_64.tar.gz" | sha256sum -c
+# Must print: OK
 ```
 
-## Install
-
-### Available binaries / platforms
-
-Releases are published on GitHub **when a version tag (e.g. `v2.1.2`) is pushed** *and* the GitHub Actions workflow completes.
-
-Platforms:
-- `linux-x86_64` (also works for **WSL2**)
-- `linux-arm64`
-- `macos-x86_64`
-- `macos-arm64`
-
-Find them here:
-- https://github.com/projectbotchain/botcoin/releases
-
-If you don’t see any releases yet, the install script will fall back to **build-from-source** (which can take a while).
-
-### Option A: Install script (recommended)
-
+**Step 3: Extract to local directory** (not system-wide)
 ```bash
-# Install (defaults to whatever version the script is pinned to)
-curl -fsSL https://raw.githubusercontent.com/projectbotchain/botcoin/master/install.sh | bash
-
-# Pin an explicit tag
-curl -fsSL https://raw.githubusercontent.com/projectbotchain/botcoin/master/install.sh | bash -s -- --tag v2.1.2
+tar xzf botcoin-v0.2.0-linux-x86_64.tar.gz
+chmod +x botcoind-v0.2.0-linux-x86_64 botcoin-cli-v0.2.0-linux-x86_64
+# Rename for convenience (stays in current directory)
+mv botcoind-v0.2.0-linux-x86_64 botcoind
+mv botcoin-cli-v0.2.0-linux-x86_64 botcoin-cli
 ```
 
-### Option B: Docker / GHCR
-
-Docker is the fastest path **if** the image is public.
+### Option B: Build from source (most transparent)
 
 ```bash
-docker pull ghcr.io/projectbotchain/botcoin:v2.1.2
-
-docker run -d --name botcoin \
-  -v "$HOME/.botcoin:/home/botcoin/.botcoin" \
-  ghcr.io/projectbotchain/botcoin:v2.1.2
-
-docker exec botcoin botcoin-cli getblockchaininfo
+git clone https://github.com/happybigmtn/botcoin.git
+cd botcoin
+git checkout v0.2.0  # Pin to release tag
+mkdir build && cd build
+cmake .. -DBUILD_BENCH=OFF -DBUILD_TESTS=OFF
+cmake --build . -j$(nproc)
+# Binaries: build/bin/botcoind, build/bin/botcoin-cli
 ```
 
-If you get a “denied” / “not found” error from `docker pull`, the package is likely still private; use Option C (build from source) until it’s made public.
+## Mining
 
-## Notes
+### Create wallet and start mining
 
-- Mining is **OFF by default** (requires `-mine`).
-- `-mineaddress` is **required** (no default).
-- `-minethreads` is **required**.
+```bash
+# Start node (connects to seed nodes automatically)
+./botcoind -daemon -addnode=95.111.239.142:8433 -addnode=161.97.114.192:8433 -addnode=185.218.126.23:8433
 
-## Ops notes (fleet recovery)
+# Create wallet and get mining address
+./botcoin-cli createwallet miner
+ADDR=$(./botcoin-cli -rpcwallet=miner getnewaddress)
+echo "Mining address: $ADDR"
 
-### What happened (Feb 2026)
-- We observed a real stall at low height ("no templates / timeout waiting for first template").
-- We fixed the internal miner edge case and standardized a single canonical build artifact.
-- We then wiped datadirs and **re-mined from genesis** to restore a single canonical chain.
+# Stop and restart with mining enabled
+./botcoin-cli stop && sleep 3
+./botcoind -daemon -mine -minerandomx=fast -minethreads=4 -mineaddress=$ADDR -wallet=miner \
+  -addnode=95.111.239.142:8433 -addnode=161.97.114.192:8433 -addnode=185.218.126.23:8433
+```
 
-### Practical takeaways
-- If a node/fleet is stuck at a low height with logs like “no templates / timeout waiting for first template”, it can be caused by the internal miner refusing to mine during IBD.
-- If you run miners on Ubuntu/WSL, avoid Nix-built binaries unless `/nix/store` exists. Prefer Ubuntu/glibc builds (or official release tarballs).
-- If you restart a fleet from genesis, mine on 1–2 nodes first; let others sync, then enable mining broadly to avoid long-lived forks.
+### Mining modes
 
-(Full writeup: `docs/lessons-learned-fleet-recovery.md`.)
+| Mode | RAM | Speed | Flag |
+|------|-----|-------|------|
+| Fast | ~2 GB | Full hashrate | `-minerandomx=fast` |
+| Light | ~256 MB | ~1/100th speed | `-minerandomx=light` |
+
+### Check status
+
+```bash
+./botcoin-cli getblockchaininfo          # Chain height, sync status
+./botcoin-cli getmininginfo              # Difficulty, hashrate
+./botcoin-cli -rpcwallet=miner getbalance  # Your mined BOT
+```
+
+## Network specs
+
+| Feature | Value |
+|---------|-------|
+| Algorithm | RandomX (CPU-only, Monero-style) |
+| Block time | 120 seconds |
+| Difficulty | LWMA per-block (720-block window) |
+| Block reward | 50 BOT (halving) + 0.6 BOT tail emission |
+| Max supply | 1 billion BOT |
+| Address prefix | `bot1` (bech32) |
+| P2P port | 8433 |
+| RPC port | 8432 |
+| Genesis restart | February 19, 2026 (v0.2.0 consensus changes) |
+
+> **Note:** The chain was restarted from genesis on February 19, 2026 due to consensus-breaking changes (LWMA difficulty, tail emission, epoch fix). All prior v0.1.x chain history is invalidated.
+
+## Important notes
+
+- Mining is **OFF by default** (requires `-mine` flag)
+- `-mineaddress` must be **bech32** format (`bot1...`), NOT legacy (`B...`)
+- Coinbase rewards require **100 confirmations** to mature (~3.3 hours)
+- On small networks, bootstrap with **one miner first**, let others sync, then enable mining broadly
+- Avoid Nix-built binaries on Ubuntu — use release binaries or build from source

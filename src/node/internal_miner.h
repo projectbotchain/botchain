@@ -231,7 +231,7 @@ private:
     static constexpr uint64_t HASH_BATCH_SIZE = 10000;
     static constexpr uint64_t STALENESS_CHECK_INTERVAL = 1000;
     static constexpr int MAX_BACKOFF_LEVEL = 6;  // Max 64 seconds
-    static constexpr int MIN_PEERS_FOR_MINING = 3;  // Avoid partition risk
+    static constexpr int MIN_PEERS_FOR_MINING = 1;  // Allow bootstrapping with small peer set
 };
 
 } // namespace node

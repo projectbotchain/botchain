@@ -20,8 +20,7 @@
  * - 2080 MiB dataset for fast mode (mining)
  * - 256 MiB cache for light mode (validation)
  *
- * Botcoin uses a custom ARGON_SALT ("BotcoinX\x01") to differentiate
- * from Monero and prevent hashpower rental attacks.
+ * Botcoin currently uses the default RandomX ARGON_SALT ("RandomX\x03").
  *
  * Seed hash rotation:
  * - Epoch: 2048 blocks (~34 hours at 60s blocks)

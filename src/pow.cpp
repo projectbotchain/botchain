@@ -15,41 +15,121 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <logging.h>
+
+#include <algorithm>
+#include <vector>
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
-    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    unsigned int nProofOfWorkLimit = bnPowLimit.GetCompact();
 
-    // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
+    // Monero-style difficulty adjustment: recalculate every block using a
+    // window of recent block timestamps and cumulative difficulties.
+    //
+    // Algorithm (from Monero's next_difficulty):
+    //   1. Collect up to DIFFICULTY_WINDOW timestamps
+    //   2. Sort timestamps, cut DIFFICULTY_CUT outliers from each end
+    //   3. difficulty = (total_work_in_window * target_seconds) / time_span
+    //
+    // This provides smooth, responsive difficulty that adjusts every block,
+    // resistant to timestamp manipulation via the cut mechanism.
+
+    const int64_t DIFFICULTY_WINDOW = params.nDifficultyWindow;  // 720 (like Monero)
+    const int64_t DIFFICULTY_CUT = params.nDifficultyCut;        // 60 (like Monero)
+    const int64_t T = params.nPowTargetSpacing;                  // 120s target
+
+    // Collect timestamps and per-block difficulties from the window
+    // Walk back, then reverse so index 0 = oldest
+    std::vector<int64_t> timestamps;
+    std::vector<arith_uint256> difficulties;
+
     {
-        if (params.fPowAllowMinDifficultyBlocks)
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 10 minutes
-            // then it MUST be a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
-                return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
-            }
+        const CBlockIndex* pindex = pindexLast;
+        int64_t count = 0;
+        while (pindex && count < DIFFICULTY_WINDOW) {
+            // Skip genesis block - its timestamp is artificial and would
+            // create a huge time_span that prevents difficulty adjustment
+            if (pindex->nHeight == 0) break;
+
+            timestamps.push_back(pindex->GetBlockTime());
+            arith_uint256 target;
+            target.SetCompact(pindex->nBits);
+            if (target == 0) target = 1;
+            arith_uint256 block_difficulty = bnPowLimit / target;
+            if (block_difficulty == 0) block_difficulty = 1;
+            difficulties.push_back(block_difficulty);
+            pindex = pindex->pprev;
+            count++;
         }
-        return pindexLast->nBits;
     }
 
-    // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
-    assert(nHeightFirst >= 0);
-    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
-    assert(pindexFirst);
+    size_t length = timestamps.size();
+    if (length <= 1) {
+        return nProofOfWorkLimit;
+    }
 
-    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+    // Reverse so index 0 = oldest block in window
+    std::reverse(timestamps.begin(), timestamps.end());
+    std::reverse(difficulties.begin(), difficulties.end());
+
+    // Build cumulative difficulties (ascending: index 0 = oldest, smallest cumul)
+    std::vector<arith_uint256> cumulative_difficulties(length);
+    cumulative_difficulties[0] = difficulties[0];
+    for (size_t i = 1; i < length; i++) {
+        cumulative_difficulties[i] = cumulative_difficulties[i-1] + difficulties[i];
+    }
+
+    // Sort timestamps (Monero sorts to handle out-of-order timestamps)
+    std::vector<int64_t> sorted_timestamps(timestamps);
+    std::sort(sorted_timestamps.begin(), sorted_timestamps.end());
+
+    // Cut outliers from each end
+    size_t cut_begin, cut_end;
+    if (length <= static_cast<size_t>(DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT)) {
+        cut_begin = 0;
+        cut_end = length;
+    } else {
+        cut_begin = (length - (DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT) + 1) / 2;
+        cut_end = cut_begin + (DIFFICULTY_WINDOW - 2 * DIFFICULTY_CUT);
+    }
+
+    if (cut_begin + 2 > cut_end || cut_end > length) {
+        return nProofOfWorkLimit;
+    }
+
+    int64_t time_span = sorted_timestamps[cut_end - 1] - sorted_timestamps[cut_begin];
+    if (time_span <= 0) {
+        time_span = 1;
+    }
+
+    arith_uint256 total_work = cumulative_difficulties[cut_end - 1] - cumulative_difficulties[cut_begin];
+    if (total_work == 0) {
+        return nProofOfWorkLimit;
+    }
+
+    // difficulty = total_work * T / time_span
+    // Use explicit uint32_t cast for T to ensure arith_uint256 multiplication works
+    arith_uint256 bnT(static_cast<uint32_t>(T));
+    arith_uint256 bnTimeSpan(static_cast<uint64_t>(time_span));
+    arith_uint256 next_difficulty = (total_work * bnT + bnTimeSpan - 1) / bnTimeSpan;
+    if (next_difficulty == 0) next_difficulty = 1;
+
+    // Convert difficulty back to nBits target: target = powLimit / difficulty
+    arith_uint256 bnNew = bnPowLimit / next_difficulty;
+    if (bnNew > bnPowLimit) bnNew = bnPowLimit;
+    if (bnNew == 0) bnNew = 1;
+
+    unsigned int result = bnNew.GetCompact();
+
+    LogInfo("LWMA: length=%d cut=[%d,%d) time_span=%d total_work=%s next_diff=%s target=%s nBits=0x%08x\n",
+             length, cut_begin, cut_end, time_span,
+             total_work.GetHex(), next_difficulty.GetHex(),
+             bnNew.GetHex(), result);
+
+    return result;
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
@@ -89,54 +169,11 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     return bnNew.GetCompact();
 }
 
-// Check that on difficulty adjustments, the new difficulty does not increase
-// or decrease beyond the permitted limits.
+// With Monero-style per-block difficulty adjustment, every block can have a
+// different difficulty. We allow all transitions (the algorithm self-regulates).
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
 {
-    if (params.fPowAllowMinDifficultyBlocks) return true;
-
-    if (height % params.DifficultyAdjustmentInterval() == 0) {
-        int64_t smallest_timespan = params.nPowTargetTimespan/4;
-        int64_t largest_timespan = params.nPowTargetTimespan*4;
-
-        const arith_uint256 pow_limit = UintToArith256(params.powLimit);
-        arith_uint256 observed_new_target;
-        observed_new_target.SetCompact(new_nbits);
-
-        // Calculate the largest difficulty value possible:
-        arith_uint256 largest_difficulty_target;
-        largest_difficulty_target.SetCompact(old_nbits);
-        largest_difficulty_target *= largest_timespan;
-        largest_difficulty_target /= params.nPowTargetTimespan;
-
-        if (largest_difficulty_target > pow_limit) {
-            largest_difficulty_target = pow_limit;
-        }
-
-        // Round and then compare this new calculated value to what is
-        // observed.
-        arith_uint256 maximum_new_target;
-        maximum_new_target.SetCompact(largest_difficulty_target.GetCompact());
-        if (maximum_new_target < observed_new_target) return false;
-
-        // Calculate the smallest difficulty value possible:
-        arith_uint256 smallest_difficulty_target;
-        smallest_difficulty_target.SetCompact(old_nbits);
-        smallest_difficulty_target *= smallest_timespan;
-        smallest_difficulty_target /= params.nPowTargetTimespan;
-
-        if (smallest_difficulty_target > pow_limit) {
-            smallest_difficulty_target = pow_limit;
-        }
-
-        // Round and then compare this new calculated value to what is
-        // observed.
-        arith_uint256 minimum_new_target;
-        minimum_new_target.SetCompact(smallest_difficulty_target.GetCompact());
-        if (minimum_new_target > observed_new_target) return false;
-    } else if (old_nbits != new_nbits) {
-        return false;
-    }
+    // Monero-style: difficulty changes every block, no fixed interval check needed
     return true;
 }
 

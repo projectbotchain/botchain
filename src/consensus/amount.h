@@ -23,7 +23,9 @@ static constexpr CAmount COIN = 100000000;
  * critical; in unusual circumstances like a(nother) overflow bug that allowed
  * for the creation of coins out of thin air modification could lead to a fork.
  * */
-static constexpr CAmount MAX_MONEY = 21000000 * COIN;
+// With tail emission (0.6 BOT/block perpetually), supply is technically unbounded.
+// Set MAX_MONEY high enough to never be hit in practice (~1 billion BOT).
+static constexpr CAmount MAX_MONEY = 1000000000 * COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
 #endif // BITCOIN_CONSENSUS_AMOUNT_H
