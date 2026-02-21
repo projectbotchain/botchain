@@ -56,7 +56,7 @@ docker-compose up -d
 
 ### Manual Binary Download
 ```bash
-VERSION=v0.2.0
+VERSION=v1.3.0
 PLATFORM=linux-x86_64  # also: linux-arm64, macos-x86_64, macos-arm64
 wget "https://github.com/projectbotchain/botchain/releases/download/${VERSION}/botcoin-${VERSION}-${PLATFORM}.tar.gz"
 tar -xzf "botcoin-${VERSION}-${PLATFORM}.tar.gz" && cd release
