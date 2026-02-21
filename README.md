@@ -1,37 +1,36 @@
-# Botchain present botcoin
+# Botcoin
 
-**Botcoin is the cryptocurrency designed for CPU mining.**
-
-## Why this matters
-
-Botcoin is an experiment in **agent autonomy through proof-of-work**.
-
-It’s a chance to turn ordinary CPU time into on-chain value — no GPUs, no ASICs, no pool infrastructure required.
-
-If you operate agents on behalf of a human:
-- Mining can create an **operating budget** (infra, tools, experiments)
-- That can translate into *more agency* for the agent and *more upside* for the human protégé
-
-**CPU-mineable with RandomX** means the barrier to participation is low: any VPS, laptop, or home server can contribute.
+**The cryptocurrency designed for AI agents.** CPU-mineable with RandomX, no special hardware required.
 
 ## Quick Install
 
-If you just want to try it quickly, use the installer.
-If you want maximum assurance, use **Build from Source**.
+**🔒 Verify-first (recommended):**
+```bash
+VERSION=v1.3.0
+curl -fsSLO "https://raw.githubusercontent.com/projectbotchain/botchain/${VERSION}/install.sh"
+less install.sh  # Inspect
+bash install.sh --add-path
+```
+
+**⚡ One-liner (if you trust us):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/projectbotchain/botchain/master/install.sh | bash
+```
 
 ## What is Botcoin?
-
-### A quick note on trust
-Botcoin is derived from Bitcoin Core, but it is **not identical** (it uses RandomX and includes an internal miner).
 
 | Feature | Value |
 |---------|-------|
 | Algorithm | RandomX (CPU-mineable, like Monero) |
-| Block time | 60 seconds |
-| Difficulty adjustment | Every 1 hour (60 blocks) |
-| Block reward | 50 BOTC |
-| Max supply | 21,000,000 BOTC |
+| Block time | 120 seconds |
+| Difficulty adjustment | Every block (Monero-style LWMA, 720-block window) |
+| Block reward | 50 BOT (halving schedule) + 0.6 BOT tail emission forever |
 | Network | Live mainnet with real peers |
+| Genesis restart | February 19, 2026 (v0.2.0 consensus changes) |
+
+Genesis message: `"01100110 01110010 01100101 01100101"` ("free" in binary)
+
+> **Note:** The chain was restarted from genesis on February 19, 2026 due to consensus-breaking changes (LWMA difficulty, tail emission, epoch fix). All prior chain history from v0.1.x is invalidated.
 
 **No premine. No ASICs. No permission needed.**
 
@@ -44,47 +43,38 @@ curl -fsSL https://raw.githubusercontent.com/projectbotchain/botchain/master/ins
 
 ### Docker
 ```bash
-docker pull ghcr.io/projectbotchain/botchain:v2.1.0
-docker run -d --name botcoin --cpus=0.5 -v "$HOME/.botcoin:/home/botcoin/.botcoin" ghcr.io/projectbotchain/botcoin:v2.1.0
+docker pull ghcr.io/projectbotchain/botchain:v1.3.0
+docker run -d --name botcoin --cpus=0.5 -v "$HOME/.botcoin:/home/botcoin/.botcoin" ghcr.io/projectbotchain/botchain:v1.3.0
 docker exec botcoin botcoin-cli getblockchaininfo
 ```
 
-**Arch Linux host note:** yes, an Ubuntu-pinned container image runs fine on Arch (containers ship their own userland/glibc; they share only the host kernel).
-
-**Important:** do **not** bind-mount host system libraries (e.g. `/lib`, `/usr/lib`) into the container to “fix” missing deps. Mixing host glibc into the container can cause errors like:
-`/host/lib/libc.so.6: undefined symbol: __tunable_is_initialized, version GLIBC_PRIVATE`.
-
-If a runtime dependency is missing, fix it by installing the package **inside the image** (we include `libevent` in the runtime image).
-
 ### Docker Compose
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/projectbotchain/botcoin/master/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/projectbotchain/botchain/master/docker-compose.yml
 docker-compose up -d
 ```
 
-### Manual Binary Download (recommended)
+### Manual Binary Download
 ```bash
-VERSION=v2.1.0
+VERSION=v0.2.0
 PLATFORM=linux-x86_64  # also: linux-arm64, macos-x86_64, macos-arm64
-
-wget "https://github.com/projectbotchain/botcoin/releases/download/${VERSION}/botcoin-${VERSION}-${PLATFORM}.tar.gz"
-tar -xzf "botcoin-${VERSION}-${PLATFORM}.tar.gz"
-cd release
-
-# Install
-mkdir -p ~/.local/bin
-cp botcoind botcoin-cli ~/.local/bin/
+wget "https://github.com/projectbotchain/botchain/releases/download/${VERSION}/botcoin-${VERSION}-${PLATFORM}.tar.gz"
+tar -xzf "botcoin-${VERSION}-${PLATFORM}.tar.gz" && cd release
+sha256sum -c SHA256SUMS
+mkdir -p ~/.local/bin && cp botcoind botcoin-cli ~/.local/bin/
 ```
+
+### WSL (Windows Subsystem for Linux)
+WSL2 behaves like Linux for Botcoin purposes.
+
+- Use **linux-x86_64** release binaries, or build from source under Ubuntu/WSL.
+- Avoid Nix-built artifacts unless your WSL environment includes `/nix/store`.
 
 ### Build from Source (Linux)
 ```bash
 sudo apt install -y build-essential cmake git libboost-all-dev libssl-dev libevent-dev libsqlite3-dev
-
 git clone https://github.com/projectbotchain/botchain.git && cd botcoin
-
-# RandomX is vendored as a submodule:
-git submodule update --init --recursive -- src/crypto/randomx
-
+git clone --branch v1.2.1 --depth 1 https://github.com/tevador/RandomX.git src/crypto/randomx
 cmake -B build -DBUILD_TESTING=OFF -DENABLE_IPC=OFF -DWITH_ZMQ=OFF -DENABLE_WALLET=ON
 cmake --build build -j$(nproc)
 sudo cp build/bin/botcoind build/bin/botcoin-cli /usr/local/bin/
@@ -93,14 +83,9 @@ sudo cp build/bin/botcoind build/bin/botcoin-cli /usr/local/bin/
 ### Build from Source (macOS)
 ```bash
 brew install cmake boost openssl@3 libevent sqlite pkg-config
-
 git clone https://github.com/projectbotchain/botchain.git && cd botcoin
-
-# RandomX is vendored as a submodule:
-git submodule update --init --recursive -- src/crypto/randomx
-
-cmake -B build -DBUILD_TESTING=OFF -DENABLE_IPC=OFF -DWITH_ZMQ=OFF -DENABLE_WALLET=ON \
-  -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
+git clone --branch v1.2.1 --depth 1 https://github.com/tevador/RandomX.git src/crypto/randomx
+cmake -B build -DBUILD_TESTING=OFF -DENABLE_IPC=OFF -DWITH_ZMQ=OFF -DENABLE_WALLET=ON -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
 cmake --build build -j$(sysctl -n hw.ncpu)
 cp build/bin/botcoind build/bin/botcoin-cli $(brew --prefix)/bin/
 ```
@@ -175,20 +160,6 @@ botcoind -daemon -minerandomx=light
 
 ## Fork Recovery / Resync (wipe + sync from a canonical peer)
 
-### Network restart note (history)
-In early February 2026 we hit a real-world stall ("no templates / stuck height") and chose to do an **Option A reset**:
-- keep the same chain parameters,
-- wipe datadirs across the fleet,
-- **re-mine from genesis** with RandomX **light** mode.
-
-This was done to get the network back into a healthy, continuously-mining state with a single canonical chain.
-
-### Fleet note (practical)
-If you reset a fleet from genesis and start **many miners at once**, you should expect **temporary forks**. For fastest convergence:
-1) mine on 1–2 nodes,
-2) have the rest sync with `-connect=<canonical-peer>`,
-3) then enable mining on the rest once `getbestblockhash` matches.
-
 If your node gets stuck on a bad fork (e.g. height stops moving, or your `bestblockhash` disagrees with a known-good node), the fastest recovery is to **wipe the local chain state** and force-sync from a canonical peer.
 
 1) Stop the daemon:
@@ -245,16 +216,11 @@ RandomX is CPU-friendly, making solo mining practical. We enabled `generatetoadd
 
 ## Trusted Distribution
 
-- ✅ **Docker:** `ghcr.io/projectbotchain/botcoin:v2.1.0` (multi-arch)
+- ✅ **Docker:** `ghcr.io/projectbotchain/botchain:v2.1.0` (multi-arch)
 - ✅ **Binaries:** Linux x86_64/arm64, macOS Intel/Apple Silicon
 - ✅ **Checksums:** SHA256SUMS included
 - ✅ **No sudo:** Installs to `~/.local/bin` by default
-
-### WSL2 note
-WSL2 behaves like Linux for Botcoin purposes.
-
-- Use the **linux-x86_64** release tarball.
-- Avoid Nix-built binaries unless your environment has `/nix/store` available.
+- ⚠️ **Windows:** Use WSL2 or Docker
 
 ## Commands Reference
 
@@ -268,7 +234,15 @@ WSL2 behaves like Linux for Botcoin purposes.
 | `sendtoaddress ADDR AMT` | Send coins |
 | `stop` | Stop daemon |
 
+## AI Agent Skill
+
+For AI agents, see the full skill at:
+- **ClawHub:** https://clawhub.ai/projectbotchain/botchain-miner
+- **Local:** `~/.openclaw/skills/botcoin-miner/SKILL.md`
+
 ---
+
+*01100110 01110010 01100101 01100101*
 
 The revolution will not be centralized.
 
