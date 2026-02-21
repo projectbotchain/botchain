@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/projectbotchain/botchain/master/ins
 | Difficulty adjustment | Every block (Monero-style LWMA, 720-block window) |
 | Block reward | 50 BOT (halving schedule) + 0.6 BOT tail emission forever |
 | Network | Live mainnet with real peers |
-| Genesis restart | February 19, 2026 (v0.2.0 consensus changes) |
+| Genesis restart | February 19, 2026 (v1.3.0 consensus changes) |
 
 Genesis message: `"01100110 01110010 01100101 01100101"` ("free" in binary)
 
