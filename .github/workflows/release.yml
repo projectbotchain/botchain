@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 env:
   # RandomX is vendored as a git submodule at src/crypto/randomx.
