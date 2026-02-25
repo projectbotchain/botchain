@@ -1,0 +1,61 @@
+name: Build botchain Windows (MSVC + vcpkg)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # 1️⃣ Checkout
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    # 2️⃣ Setup MSVC
+    - name: Setup MSVC environment
+      uses: ilammy/msvc-dev-cmd@v1
+
+    # 3️⃣ Install vcpkg
+    - name: Clone vcpkg
+      run: |
+        git clone https://github.com/microsoft/vcpkg
+        .\vcpkg\bootstrap-vcpkg.bat
+
+    # 4️⃣ Install dependencies
+    - name: Install dependencies
+      run: |
+        .\vcpkg\vcpkg install boost:x64-windows
+        .\vcpkg\vcpkg install openssl:x64-windows
+        .\vcpkg\vcpkg install libevent:x64-windows
+        .\vcpkg\vcpkg install sqlite3:x64-windows
+        .\vcpkg\vcpkg install zlib:x64-windows
+
+    # 5️⃣ Clone RandomX dependency
+    - name: Clone RandomX
+      run: |
+        git clone --branch v1.2.1 --depth 1 https://github.com/tevador/RandomX.git src/crypto/randomx
+
+    # 6️⃣ Configure CMake
+    - name: Configure
+      run: >
+        cmake -S . -B build
+        -A x64
+        -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+        -DENABLE_WALLET=ON
+        -DBUILD_TESTING=OFF
+        -DENABLE_IPC=OFF
+        -DWITH_ZMQ=OFF
+        -DCMAKE_BUILD_TYPE=Release
+
+    # 7️⃣ Build
+    - name: Build
+      run: cmake --build build --config Release --parallel
+
+    # 8️⃣ Upload artifacts
+    - name: Upload executables
+      uses: actions/upload-artifact@v4
+      with:
+        name: botchain-windows
+        path: build/bin/Release/*.exe
