@@ -42,7 +42,6 @@ jobs:
           name: linux-x86_64
           path: botcoin-*-linux-x86_64.tar.gz
 
-
   build-windows:
     runs-on: windows-latest
     steps:
@@ -61,13 +60,13 @@ jobs:
           git clone https://github.com/microsoft/vcpkg
           .\vcpkg\bootstrap-vcpkg.bat
 
-      - name: Install dependencies
+      - name: Install dependencies (classic mode)
         run: |
-          .\vcpkg\vcpkg install boost:x64-windows
-          .\vcpkg\vcpkg install openssl:x64-windows
-          .\vcpkg\vcpkg install libevent:x64-windows
-          .\vcpkg\vcpkg install sqlite3:x64-windows
-          .\vcpkg\vcpkg install zlib:x64-windows
+          .\vcpkg\vcpkg install boost:x64-windows --classic
+          .\vcpkg\vcpkg install openssl:x64-windows --classic
+          .\vcpkg\vcpkg install libevent:x64-windows --classic
+          .\vcpkg\vcpkg install sqlite3:x64-windows --classic
+          .\vcpkg\vcpkg install zlib:x64-windows --classic
 
       - name: Configure
         run: >
@@ -95,7 +94,6 @@ jobs:
         with:
           name: windows-x86_64
           path: botcoin-*-windows-x86_64.zip
-
 
   release:
     needs: [build-linux-x86_64, build-windows]
