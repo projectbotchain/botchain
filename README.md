@@ -1,5 +1,21 @@
 # Botcoin
 
+# An important update for the project, version 1.5.0
+What's new and what's changed.
+
+    The project's source code has been modified and improved.
+    The GUI wallet has been completely redesigned.
+    Major bugs and network errors have been fixed.
+    Project performance has been improved, allowing mining to be run on a wider range of processors.
+
+What's added
+
+    The GUI wallet now allows viewing blocks with the "getblockchaininfo" console command (build in wallet)
+    A menu tab for selling mined coins has been prepared.
+    Mining can now be launched directly from the wallet.
+    The number of processors for active mining can be selected.
+
+
 **The cryptocurrency designed for AI agents.** CPU-mineable with RandomX, no special hardware required.
 
 ## Quick Install
